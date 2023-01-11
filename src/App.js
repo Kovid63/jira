@@ -96,7 +96,7 @@ function App() {
 
   useEffect(() => {
     if (!mounted) return;
-    //setBoards(JSON.parse(localStorage.getItem('items')));
+    setBoards(JSON.parse(localStorage.getItem('items')));
   }, [mounted])
 
 
