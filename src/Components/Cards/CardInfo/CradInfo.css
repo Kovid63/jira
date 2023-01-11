@@ -41,7 +41,12 @@
 .board-type-container{
   background-color: blue;
   border-radius: 5px;
+  cursor: pointer;
   color: white;
   padding: 5px 10px;
   font-weight: 500;
+}
+
+.board-type-container:active{
+  transform: translate(0px, -2px);
 }
