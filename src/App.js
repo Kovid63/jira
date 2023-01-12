@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import './App.css';
 import Board from './Components/Board/Board';
 import Editable from './Components/Editable/Editable';
-import Modal from './Components/Modal/Modal';
-import CardInfo from './Components/Cards/CardInfo/CardInfo';
 
 function App() {
 
@@ -96,12 +94,17 @@ function App() {
 
   useEffect(() => {
     if (!mounted) return;
-    setBoards(JSON.parse(localStorage.getItem('items')));
+    if(localStorage.getItem('items') == null){
+      localStorage.setItem('items', JSON.stringify(boards));
+      setBoards(JSON.parse(localStorage.getItem('items')));
+    }else{
+      setBoards(JSON.parse(localStorage.getItem('items')));
+    }
   }, [mounted])
 
 
   window.addEventListener('unload', () => {
-      localStorage.setItem('items', JSON.stringify(boards));
+    localStorage.setItem('items', JSON.stringify(boards));
   })
 
   const [target, setTarget] = useState({
@@ -137,10 +140,9 @@ function App() {
     const index = boards.findIndex((item) => item.id === bid);
     if (index < 0) return;
 
-    console.log(index);
-    const tempBoards = [...boards];
-    tempBoards[index].cards.push(cards);
-    setBoards(tempBoards);
+    const tempBoardsOne = [...boards];
+    tempBoardsOne[index].cards.push(cards);
+    setBoards(tempBoardsOne);
   };
 
   const removeCard = (cid, bid) => {
