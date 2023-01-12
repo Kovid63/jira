@@ -100,7 +100,6 @@ function App() {
     }else{
       setBoards(JSON.parse(localStorage.getItem('items')));
     }
-    console.log(localStorage.getItem('items'));
   }, [mounted])
 
 
