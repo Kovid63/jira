@@ -9,7 +9,7 @@ function App() {
   const [boards, setBoards] = useState([
 
     {
-      id: Date.now() + Math.random() * 2,
+      id: 0,
       title: "To Do",
       cards: [],
       /* {
@@ -39,7 +39,7 @@ function App() {
      ]*/
     },
     {
-      id: Date.now() + Math.random() * 2,
+      id: 1,
       title: "Processing",
       cards: [],
       //   {
@@ -51,7 +51,7 @@ function App() {
       // ]
     },
     {
-      id: Date.now() + Math.random() * 2,
+      id: 2,
       title: "Testing",
       cards: [],
       //   {
@@ -69,7 +69,7 @@ function App() {
       // ]
     },
     {
-      id: Date.now() + Math.random() * 2,
+      id: 3,
       title: "Completed",
       cards: [],
       //   {
@@ -88,23 +88,82 @@ function App() {
     },
   ]);
 
+  async function getData() {
+    const res = await fetch('http://localhost:8080/user/getAll')
+    if (res.status === 200) {
+      const result = await res.json();
+      if (result.length !== 0) {
+        result.forEach((card) => {
+          const index = boards.findIndex((item) => item.id === parseInt(card.boardId));
+          const tempBoards = [...boards];
+          const cards = {...card, date: card.date}
+          tempBoards[index].cards.push(cards);
+          setBoards(tempBoards);
+        })
+      }
+    }
+  };
+
+  async function updateCardDB(cid, bid, card){
+    const res = await fetch(`http://localhost:8080/user/${cid}`, {
+      method: 'PUT',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        title: card.title,
+        information: card.information,
+        date: card.date,
+        boardId: bid,
+        id: cid,
+      })
+    });
+  };
+
+  async function deleteCardDB(cid){
+    const res = await fetch(`http://localhost:8080/user/${cid}`, {
+      method: 'DELETE',
+      headers: {
+        "Content-Type": "application/json"
+      },
+    });
+  };
+
+  async function addCardDB(card) {
+    const res = await fetch('http://localhost:8080/user/add', {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        title: card.title,
+        boardId: card.bid
+      })
+    });
+    if (res.status === 200) {
+      const result = await res.json();
+      return result;
+    }
+  };
+
   useEffect(() => {
     setMounted(true);
   }, [])
 
   useEffect(() => {
     if (!mounted) return;
-    if(localStorage.getItem('items') == null){
+    getData();
+    /*if(localStorage.getItem('items') == null){
       localStorage.setItem('items', JSON.stringify(boards));
       setBoards(JSON.parse(localStorage.getItem('items')));
     }else{
       setBoards(JSON.parse(localStorage.getItem('items')));
-    }
+    } */ // eslint-disable-next-line
   }, [mounted])
 
 
   window.addEventListener('unload', () => {
-    localStorage.setItem('items', JSON.stringify(boards));
+    //localStorage.setItem('items', JSON.stringify(boards));
   })
 
   const [target, setTarget] = useState({
@@ -112,29 +171,34 @@ function App() {
     bid: "",
   });
 
-  const addCard = (title, bid) => {
+  const addCard = async(title, bid) => {
+    var todayDate = new Date().toISOString().slice(0, 10);
     const cards = {
-      id: Date.now() + Math.random(),
-      title,
-      date: "",
+      title: title,
+      date: todayDate,
       desc: "",
     };
-
+    const cid = await addCardDB({ ...cards, bid: bid });
     const index = boards.findIndex((item) => item.id === bid);
     if (index < 0) return;
-
+    const card = {
+      id : cid,
+      title: title,
+      date: todayDate,
+      information: "",
+      boardId: bid,
+    };
     const tempBoards = [...boards];
-    tempBoards[index].cards.push(cards);
+    tempBoards[index].cards.push(card);
     setBoards(tempBoards);
   };
 
-  const moveCard = (value, bid) => {
-
+  const moveCard = async(value, bid) => {
     const cards = {
       id: value.id,
       title: value.title,
       date: value.date,
-      desc: value.desc,
+      desc: value.information,
     };
 
     const index = boards.findIndex((item) => item.id === bid);
@@ -143,6 +207,22 @@ function App() {
     const tempBoardsOne = [...boards];
     tempBoardsOne[index].cards.push(cards);
     setBoards(tempBoardsOne);
+    const res = await fetch(`http://localhost:8080/user/${cards.id}`, {
+      method: 'PUT',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        title: cards.title,
+        information: cards.desc,
+        date: cards.date,
+        boardId: bid,
+        id: cards.id,
+      })
+    });
+    if(res.status === 200){
+      refreshPage();
+    }
   };
 
   const removeCard = (cid, bid) => {
@@ -155,9 +235,10 @@ function App() {
     const tempBoards = [...boards];
     tempBoards[bIndex].cards.splice(cIndex, 1);
     setBoards(tempBoards);
+    deleteCardDB(cid);
   };
 
-  const handleDragEnd = (cid, bid) => {
+  const handleDragEnd = (cid, bid, card) => {
     let s_bIndex, s_cIndex, t_bIndex, t_cIndex;
 
     s_bIndex = boards.findIndex((item) => item.id === bid);
@@ -177,8 +258,8 @@ function App() {
 
     tempBoards[s_bIndex].cards.splice(s_cIndex, 1);
     tempBoards[t_bIndex].cards.splice(t_cIndex, 0, tempCard);
-
     setBoards(tempBoards);
+    moveCard(card, target.bid);
   };
 
   const handleDragEnter = (cid, bid) => {
@@ -198,6 +279,11 @@ function App() {
     const tempBoards = [...boards]
     tempBoards[bIndex].cards[cIndex] = cards;
     setBoards(tempBoards);
+    updateCardDB(cid, bid, cards)
+  }
+
+  function refreshPage() {
+    window.location.reload(false);
   }
 
   // useEffect(()=>{
@@ -212,7 +298,7 @@ function App() {
           <Editable
             displayClass="app_nav_button_add"
             text="Create Task" placeholder="Enter Board Title"
-            onSubmit={(value) => {addCard(value, boards[0]?.id)}}
+            onSubmit={(value) => { addCard(value, boards[0]?.id) }}
           />
         </div>
       </div>

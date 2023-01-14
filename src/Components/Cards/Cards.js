@@ -29,7 +29,7 @@ function Cards(props) {
         boardId={props.boardId}
         onClose={() => setShowModal(false)} />)}
       <div className="cards" draggable
-        onDragEnd={() => props.handleDragEnd(props.cards?.id, props.boardId)}
+        onDragEnd={() => props.handleDragEnd(props.cards?.id, props.boardId, props.cards)}
         onDragEnter={() => props.handleDragEnter(props.cards?.id, props.boardId)}
         onClick={() => setShowModal(true)}
       >
@@ -48,7 +48,7 @@ function Cards(props) {
           </div>
         </div>
         <div className="cards_title">
-          <p id="title-text">{props.cards?.desc}</p>
+          <p id="title-text">{props.cards.information === undefined ? props.cards?.desc : props.cards?.information}</p>
         </div>
         <div className="cards_footer">
           <p style={{ display:'flex', alignItems: 'center'}} ><Clock style={{color: 'red'}} /><p id="date">{props.cards?.date}</p></p>

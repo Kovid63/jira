@@ -6,10 +6,10 @@ import './CradInfo.css'
 
 function CardInfo(props) {
 
-  const [values, setValues] = useState({ ...props.cards });
+  const [values, setValues] = useState({ ...props.cards});
 
   useEffect(() => {
-    props.updateCard(props.cards.id, props.boardId, values);
+    props.updateCard(props.cards.id, props.boardId, values); // eslint-disable-next-line
   }, [values]);
 
   return (
@@ -39,11 +39,11 @@ function CardInfo(props) {
             </div>
             <div className="cardinfo_box_body">
               <Editable
-                text={values.desc || "Add a description"}
-                default={values.desc}
+                text={values.information || "Add a description"}
+                default={values.information}
                 placeholder="Enter Description"
                 buttonText="Set Description"
-                onSubmit={(value) => setValues({ ...values, desc: value })}
+                onSubmit={(value) => setValues({ ...values, information: value })}
               />
             </div>
           </div>
