@@ -237,6 +237,8 @@ function App() {
       title: value.title,
       date: value.date,
       desc: value.information,
+      information: value.information,
+      boardId: bid,
     };
 
     const res = await fetch(`http://localhost:8080/user/${cards.id}`, {
