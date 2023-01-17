@@ -6,6 +6,7 @@ import Editable from './Components/Editable/Editable';
 function App() {
 
   const [mounted, setMounted] = useState(false);
+  const [key, setKey] = useState(0);
   const [boards, setBoards] = useState([
 
     {
@@ -96,7 +97,7 @@ function App() {
         result.forEach((card) => {
           const index = boards.findIndex((item) => item.id === parseInt(card.boardId));
           const tempBoards = [...boards];
-          const cards = {...card, date: card.date}
+          const cards = { ...card, date: card.date }
           tempBoards[index].cards.push(cards);
           setBoards(tempBoards);
         })
@@ -104,7 +105,7 @@ function App() {
     }
   };
 
-  async function updateCardDB(cid, bid, card){
+  async function updateCardDB(cid, bid, card) {
     const res = await fetch(`http://localhost:8080/user/${cid}`, {
       method: 'PUT',
       headers: {
@@ -120,7 +121,7 @@ function App() {
     });
   };
 
-  async function deleteCardDB(cid){
+  async function deleteCardDB(cid) {
     const res = await fetch(`http://localhost:8080/user/${cid}`, {
       method: 'DELETE',
       headers: {
@@ -171,7 +172,7 @@ function App() {
     bid: "",
   });
 
-  const addCard = async(title, bid) => {
+  const addCard = async (title, bid) => {
     var todayDate = new Date().toISOString().slice(0, 10);
     const cards = {
       title: title,
@@ -182,7 +183,7 @@ function App() {
     const index = boards.findIndex((item) => item.id === bid);
     if (index < 0) return;
     const card = {
-      id : cid,
+      id: cid,
       title: title,
       date: todayDate,
       information: "",
@@ -193,12 +194,14 @@ function App() {
     setBoards(tempBoards);
   };
 
-  const moveCard = async(value, bid) => {
+  const moveCard = async (value, bid) => {
     const cards = {
       id: value.id,
       title: value.title,
       date: value.date,
       desc: value.information,
+      information: value.information,
+      boardId: bid,
     };
 
     const index = boards.findIndex((item) => item.id === bid);
@@ -207,6 +210,7 @@ function App() {
     const tempBoardsOne = [...boards];
     tempBoardsOne[index].cards.push(cards);
     setBoards(tempBoardsOne);
+
     const res = await fetch(`http://localhost:8080/user/${cards.id}`, {
       method: 'PUT',
       headers: {
@@ -220,23 +224,55 @@ function App() {
         id: cards.id,
       })
     });
-    if(res.status === 200){
-      refreshPage();
+    if (res.status === 200) {
+      //refreshPage();
+      removeCard(parseInt(value.id), parseInt(value.boardId))
+      console.log(boards);
+    }
+  };
+
+  const moveCardDrag = async (value, bid) => {
+    const cards = {
+      id: value.id,
+      title: value.title,
+      date: value.date,
+      desc: value.information,
+    };
+
+    const res = await fetch(`http://localhost:8080/user/${cards.id}`, {
+      method: 'PUT',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        title: cards.title,
+        information: cards.desc,
+        date: cards.date,
+        boardId: bid,
+        id: cards.id,
+      })
+    });
+    if (res.status === 200) {
+      //refreshPage();
+      console.log(boards);
     }
   };
 
   const removeCard = (cid, bid) => {
     const bIndex = boards.findIndex((item) => item.id === bid);
+    console.log(bIndex);
     if (bIndex < 0) return;
 
     const cIndex = boards[bIndex].cards.findIndex((item) => item.id === cid);
+    console.log(cIndex);
     if (cIndex < 0) return;
 
     const tempBoards = [...boards];
     tempBoards[bIndex].cards.splice(cIndex, 1);
     setBoards(tempBoards);
-    deleteCardDB(cid);
+    //deleteCardDB(cid);
   };
+
 
   const handleDragEnd = (cid, bid, card) => {
     let s_bIndex, s_cIndex, t_bIndex, t_cIndex;
@@ -259,7 +295,7 @@ function App() {
     tempBoards[s_bIndex].cards.splice(s_cIndex, 1);
     tempBoards[t_bIndex].cards.splice(t_cIndex, 0, tempCard);
     setBoards(tempBoards);
-    moveCard(card, target.bid);
+    moveCardDrag(card, target.bid);
   };
 
   const handleDragEnter = (cid, bid) => {
@@ -291,7 +327,7 @@ function App() {
   // },[boards])
 
   return (
-    <div className="app">
+    <div key={key} className="app">
       <div className="app_nav">
         <h1>JIRA   <span className="s_dec">SOFTWARE</span></h1>
         <div className="app_nav_button">
