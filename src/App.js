@@ -6,7 +6,6 @@ import Editable from './Components/Editable/Editable';
 function App() {
 
   const [mounted, setMounted] = useState(false);
-  const [key, setKey] = useState(0);
   const [boards, setBoards] = useState([
 
     {
@@ -119,6 +118,7 @@ function App() {
         id: cid,
       })
     });
+    console.log(res.status);
   };
 
   async function deleteCardDB(cid) {
@@ -128,6 +128,7 @@ function App() {
         "Content-Type": "application/json"
       },
     });
+    console.log(res.status);
   };
 
   async function addCardDB(card) {
@@ -225,40 +226,10 @@ function App() {
       })
     });
     if (res.status === 200) {
-      //refreshPage();
-      removeCard(parseInt(value.id), parseInt(value.boardId))
-      console.log(boards);
+      removeCardMove(parseInt(value.id), parseInt(value.boardId))
     }
   };
 
-  const moveCardDrag = async (value, bid) => {
-    const cards = {
-      id: value.id,
-      title: value.title,
-      date: value.date,
-      desc: value.information,
-      information: value.information,
-      boardId: bid,
-    };
-
-    const res = await fetch(`http://localhost:8080/user/${cards.id}`, {
-      method: 'PUT',
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        title: cards.title,
-        information: cards.desc,
-        date: cards.date,
-        boardId: bid,
-        id: cards.id,
-      })
-    });
-    if (res.status === 200) {
-      //refreshPage();
-      console.log(boards);
-    }
-  };
 
   const removeCard = (cid, bid) => {
     const bIndex = boards.findIndex((item) => item.id === bid);
@@ -272,12 +243,26 @@ function App() {
     const tempBoards = [...boards];
     tempBoards[bIndex].cards.splice(cIndex, 1);
     setBoards(tempBoards);
-    //deleteCardDB(cid);
+    deleteCardDB(cid);
+  };
+
+  const removeCardMove = (cid, bid) => {
+    const bIndex = boards.findIndex((item) => item.id === bid);
+    console.log(bIndex);
+    if (bIndex < 0) return;
+
+    const cIndex = boards[bIndex].cards.findIndex((item) => item.id === cid);
+    console.log(cIndex);
+    if (cIndex < 0) return;
+
+    const tempBoards = [...boards];
+    tempBoards[bIndex].cards.splice(cIndex, 1);
+    setBoards(tempBoards);
   };
 
 
   const handleDragEnd = (cid, bid, card) => {
-    let s_bIndex, s_cIndex, t_bIndex, t_cIndex;
+    /*let s_bIndex, s_cIndex, t_bIndex, t_cIndex;
 
     s_bIndex = boards.findIndex((item) => item.id === bid);
     if (s_bIndex < 0) return;
@@ -296,8 +281,8 @@ function App() {
 
     tempBoards[s_bIndex].cards.splice(s_cIndex, 1);
     tempBoards[t_bIndex].cards.splice(t_cIndex, 0, tempCard);
-    setBoards(tempBoards);
-    moveCardDrag(card, target.bid);
+    setBoards(tempBoards);*/
+    moveCard(card, target.bid);
   };
 
   const handleDragEnter = (cid, bid) => {
@@ -320,16 +305,12 @@ function App() {
     updateCardDB(cid, bid, cards)
   }
 
-  function refreshPage() {
-    window.location.reload(false);
-  }
-
   // useEffect(()=>{
   //   localStorage.setItem('Jira',JSON.stringify(boards));
   // },[boards])
 
   return (
-    <div key={key} className="app">
+    <div className="app">
       <div className="app_nav">
         <h1>JIRA   <span className="s_dec">SOFTWARE</span></h1>
         <div className="app_nav_button">
